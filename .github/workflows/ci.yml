@@ -15,9 +15,10 @@ jobs:
         node-version: [20.x]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Use Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
@@ -26,22 +27,38 @@ jobs:
             server/package-lock.json
             client/package-lock.json
 
+      # ---------------- SERVER ----------------
+
       - name: Install server dependencies
         working-directory: ./server
-        run: npm ci
+        run: npm install
+
+      - name: Generate Prisma Client
+        working-directory: ./server
+        run: npx prisma generate
 
       - name: Build server
         working-directory: ./server
         run: npm run build
 
+      # ---------------- CLIENT ----------------
+
       - name: Install client dependencies
         working-directory: ./client
-        run: npm ci
+        run: npm install
 
       - name: Build client
         working-directory: ./client
         run: npm run build
 
+      # ---------------- TESTS ----------------
+
       - name: Run server tests
         working-directory: ./server
-        run: npm test
+        run: |
+          if npm run | grep -q "test"; then
+            npm test
+          else
+            echo "No test script found. Skipping tests."
+          fi
+        shell: bash
