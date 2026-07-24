@@ -16,6 +16,7 @@ export class TokenRepository {
     return prisma.token.findFirst({
       where: {
         queueId,
+        status: TokenStatus.WAITING,
       },
       orderBy: {
         position: "desc",
@@ -40,6 +41,12 @@ export class TokenRepository {
       where: {
         id,
       },
+    });
+  }
+
+  async findOwnedById(id: string, managerId: string) {
+    return prisma.token.findFirst({
+      where: { id, queue: { managerId } },
     });
   }
 

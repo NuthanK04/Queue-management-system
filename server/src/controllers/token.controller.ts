@@ -6,7 +6,7 @@ class TokenController {
     try {
       const { personName, queueId } = req.body;
 
-      const token = await tokenService.addPerson(personName, queueId);
+      const token = await tokenService.addPerson(personName, queueId, req.userId!);
 
       return res.status(201).json({
         success: true,
@@ -26,7 +26,7 @@ class TokenController {
     try {
       const { queueId } = req.params;
 
-      const tokens = await tokenService.getWaitingList(queueId);
+      const tokens = await tokenService.getWaitingList(queueId, req.userId!);
 
       return res.status(200).json({
         success: true,
@@ -47,7 +47,7 @@ class TokenController {
     try {
       const { tokenId } = req.params;
 
-      const token = await tokenService.serveToken(tokenId);
+      const token = await tokenService.serveToken(tokenId, req.userId!);
 
       return res.status(200).json({
         success: true,
@@ -67,7 +67,7 @@ class TokenController {
     try {
       const { tokenId } = req.params;
 
-      const token = await tokenService.cancelToken(tokenId);
+      const token = await tokenService.cancelToken(tokenId, req.userId!);
 
       return res.status(200).json({
         success: true,
@@ -87,7 +87,7 @@ class TokenController {
     try {
       const { tokenId } = req.params;
 
-      const tokens = await tokenService.moveTokenUp(tokenId);
+      const tokens = await tokenService.moveTokenUp(tokenId, req.userId!);
 
       return res.status(200).json({
         success: true,
@@ -107,7 +107,7 @@ class TokenController {
     try {
       const { tokenId } = req.params;
 
-      const tokens = await tokenService.moveTokenDown(tokenId);
+      const tokens = await tokenService.moveTokenDown(tokenId, req.userId!);
 
       return res.status(200).json({
         success: true,

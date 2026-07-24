@@ -1,0 +1,54 @@
+import { useEffect, useState } from "react";
+import { ArrowDown, ArrowUp, Loader2, Trash2, UserPlus } from "lucide-react";
+import { queueService, type Queue, type Token } from "@/services/queue.service";
+import { tokenService } from "@/services/token.service";
+
+type Props = { queue: Queue; onDeleted: () => void; onChanged: () => void };
+
+export default function QueueWorkspace({ queue, onDeleted, onChanged }: Props) {
+  const [tokens, setTokens] = useState<Token[]>([]);
+  const [name, setName] = useState("");
+  const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  const refresh = async () => {
+    const data = await queueService.getQueue(queue.id);
+    setTokens(data.tokens.filter((token) => token.status === "WAITING").sort((a, b) => a.position - b.position));
+  };
+
+  useEffect(() => { void refresh().catch(() => setError("Could not load this queue.")); }, [queue.id]);
+
+  const run = async (action: string, fn: () => Promise<void>) => {
+    try { setBusy(action); setError(""); await fn(); await refresh(); onChanged(); }
+    catch (err: any) { setError(err.response?.data?.message || "Something went wrong. Please try again."); }
+    finally { setBusy(null); }
+  };
+
+  const addPerson = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (!name.trim()) return;
+    await run("add", async () => { await tokenService.addPerson(queue.id, name); setName(""); });
+  };
+
+  return <section className="mt-6 rounded-2xl border border-slate-200 bg-white shadow-sm">
+    <div className="flex flex-col gap-4 border-b border-slate-100 p-6 sm:flex-row sm:items-start sm:justify-between">
+      <div><p className="text-sm font-semibold uppercase tracking-wide text-blue-600">Active queue</p><h2 className="mt-1 text-2xl font-bold text-slate-900">{queue.name}</h2>{queue.description && <p className="mt-1 text-slate-500">{queue.description}</p>}</div>
+      <button onClick={() => { if (confirm(`Delete “${queue.name}”? This removes all of its tokens.`)) void run("delete", async () => { await queueService.deleteQueue(queue.id); onDeleted(); }); }} disabled={busy === "delete"} className="inline-flex items-center justify-center gap-2 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50"><Trash2 size={16} />Delete queue</button>
+    </div>
+    <div className="p-6">
+      <form onSubmit={addPerson} className="flex flex-col gap-3 sm:flex-row">
+        <label className="sr-only" htmlFor="person-name">Person name</label>
+        <input id="person-name" value={name} onChange={(e) => setName(e.target.value)} maxLength={100} placeholder="Enter a person's name" className="min-w-0 flex-1 rounded-lg border border-slate-300 px-4 py-2.5 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" />
+        <button disabled={busy === "add" || !name.trim()} className="inline-flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-4 py-2.5 font-semibold text-white hover:bg-blue-700 disabled:opacity-50">{busy === "add" ? <Loader2 className="animate-spin" size={17} /> : <UserPlus size={17} />} Add person</button>
+      </form>
+      {error && <p role="alert" className="mt-3 rounded-md bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
+      <div className="mt-6 overflow-hidden rounded-xl border border-slate-200">
+        <div className="grid grid-cols-[3rem_1fr_auto] items-center gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500"><span>#</span><span>Person</span><span>Actions</span></div>
+        {tokens.length === 0 ? <p className="px-4 py-12 text-center text-slate-500">This queue is empty. Add the first person above.</p> : tokens.map((token, index) => <div key={token.id} className="grid grid-cols-[3rem_1fr_auto] items-center gap-3 border-t border-slate-100 px-4 py-3">
+          <span className="font-bold text-slate-500">{index + 1}</span><div><p className="font-semibold text-slate-800">{token.personName}</p><p className="text-xs text-slate-400">Joined {new Date(token.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</p></div>
+          <div className="flex items-center gap-1"><button aria-label={`Move ${token.personName} up`} disabled={index === 0 || !!busy} onClick={() => void run(`up-${token.id}`, () => tokenService.moveUp(token.id))} className="rounded p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-30"><ArrowUp size={17} /></button><button aria-label={`Move ${token.personName} down`} disabled={index === tokens.length - 1 || !!busy} onClick={() => void run(`down-${token.id}`, () => tokenService.moveDown(token.id))} className="rounded p-2 text-slate-500 hover:bg-slate-100 disabled:opacity-30"><ArrowDown size={17} /></button>{index === 0 && <button disabled={!!busy} onClick={() => void run(`serve-${token.id}`, () => tokenService.serve(token.id))} className="ml-1 rounded-md bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 disabled:opacity-50">Serve</button>}<button aria-label={`Cancel ${token.personName}`} disabled={!!busy} onClick={() => void run(`cancel-${token.id}`, () => tokenService.cancel(token.id))} className="rounded p-2 text-red-500 hover:bg-red-50 disabled:opacity-30"><Trash2 size={16} /></button></div>
+        </div>)}
+      </div>
+    </div>
+  </section>;
+}

@@ -50,7 +50,7 @@ class QueueController {
     try {
       const { queueId } = req.params;
 
-      const queue = await queueService.getQueueById(queueId);
+      const queue = await queueService.getQueueById(queueId, req.userId!);
 
       return res.status(200).json({
         success: true,
@@ -72,6 +72,7 @@ class QueueController {
 
       const queue = await queueService.updateQueue(
         queueId,
+        req.userId!,
         name,
         description
       );
@@ -94,7 +95,7 @@ class QueueController {
     try {
       const { queueId } = req.params;
 
-      await queueService.deleteQueue(queueId);
+      await queueService.deleteQueue(queueId, req.userId!);
 
       return res.status(200).json({
         success: true,
@@ -113,7 +114,7 @@ class QueueController {
     try {
       const { queueId } = req.params;
 
-      const stats = await queueService.getQueueStats(queueId);
+      const stats = await queueService.getQueueStats(queueId, req.userId!);
 
       return res.status(200).json({
         success: true,
@@ -134,7 +135,7 @@ class QueueController {
     try {
       const { queueId } = req.params;
 
-      const current = await queueService.getCurrentServing(queueId);
+      const current = await queueService.getCurrentServing(queueId, req.userId!);
 
       return res.status(200).json({
         success: true,

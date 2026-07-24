@@ -23,11 +23,9 @@ export class QueueRepository {
     });
   }
 
-  async findById(id: string) {
-    return prisma.queue.findUnique({
-      where: {
-        id,
-      },
+  async findById(id: string, managerId?: string) {
+    return prisma.queue.findFirst({
+      where: { id, ...(managerId ? { managerId } : {}) },
       include: {
         tokens: {
           orderBy: {

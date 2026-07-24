@@ -3,8 +3,9 @@ import { tokenRepository } from "../repositories/token.repository";
 import { queueRepository } from "../repositories/queue.repository";
 
 class TokenService {
-  async addPerson(personName: string, queueId: string) {
-    const queue = await queueRepository.findById(queueId);
+  async addPerson(personName: string, queueId: string, managerId: string) {
+    if (!personName?.trim()) throw new Error("Person name is required");
+    const queue = await queueRepository.findById(queueId, managerId);
 
     if (!queue) {
       throw new Error("Queue not found");
@@ -15,18 +16,20 @@ class TokenService {
     const position = lastToken ? lastToken.position + 1 : 1;
 
     return tokenRepository.create({
-      personName,
+      personName: personName.trim(),
       position,
       queueId,
     });
   }
 
-  async getWaitingList(queueId: string) {
+  async getWaitingList(queueId: string, managerId: string) {
+    const queue = await queueRepository.findById(queueId, managerId);
+    if (!queue) throw new Error("Queue not found");
     return tokenRepository.getQueueTokens(queueId);
   }
 
-  async serveToken(tokenId: string) {
-    const token = await tokenRepository.findById(tokenId);
+  async serveToken(tokenId: string, managerId: string) {
+    const token = await tokenRepository.findOwnedById(tokenId, managerId);
 
     if (!token) {
       throw new Error("Token not found");
@@ -34,6 +37,14 @@ class TokenService {
 
     if (token.status !== TokenStatus.WAITING) {
       throw new Error("Token already processed");
+    }
+
+    const tokenAhead = await tokenRepository.findPreviousWaitingToken(
+      token.queueId,
+      token.position
+    );
+    if (tokenAhead) {
+      throw new Error("Only the token at the top of the queue can be served");
     }
 
     const updatedToken = await tokenRepository.update(tokenId, {
@@ -46,8 +57,8 @@ class TokenService {
     return updatedToken;
   }
 
-  async cancelToken(tokenId: string) {
-    const token = await tokenRepository.findById(tokenId);
+  async cancelToken(tokenId: string, managerId: string) {
+    const token = await tokenRepository.findOwnedById(tokenId, managerId);
 
     if (!token) {
       throw new Error("Token not found");
@@ -67,8 +78,8 @@ class TokenService {
     return updatedToken;
   }
 
-  async moveTokenUp(tokenId: string) {
-    const token = await tokenRepository.findById(tokenId);
+  async moveTokenUp(tokenId: string, managerId: string) {
+    const token = await tokenRepository.findOwnedById(tokenId, managerId);
 
     if (!token) {
       throw new Error("Token not found");
@@ -97,8 +108,8 @@ class TokenService {
     return tokenRepository.getQueueTokens(token.queueId);
   }
 
-  async moveTokenDown(tokenId: string) {
-    const token = await tokenRepository.findById(tokenId);
+  async moveTokenDown(tokenId: string, managerId: string) {
+    const token = await tokenRepository.findOwnedById(tokenId, managerId);
 
     if (!token) {
       throw new Error("Token not found");

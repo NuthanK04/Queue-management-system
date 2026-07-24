@@ -6,8 +6,9 @@ class QueueService {
     description: string | undefined,
     managerId: string
   ) {
+    if (!name?.trim()) throw new Error("Queue name is required");
     return queueRepository.create({
-      name,
+      name: name.trim(),
       description,
       managerId,
     });
@@ -17,8 +18,8 @@ class QueueService {
     return queueRepository.findByManager(managerId);
   }
 
-  async getQueueById(queueId: string) {
-    const queue = await queueRepository.findById(queueId);
+  async getQueueById(queueId: string, managerId: string) {
+    const queue = await queueRepository.findById(queueId, managerId);
 
     if (!queue) {
       throw new Error("Queue not found");
@@ -28,11 +29,11 @@ class QueueService {
   }
 
   async updateQueue(
-    queueId: string,
+    queueId: string, managerId: string,
     name?: string,
     description?: string
   ) {
-    const queue = await queueRepository.findById(queueId);
+    const queue = await queueRepository.findById(queueId, managerId);
 
     if (!queue) {
       throw new Error("Queue not found");
@@ -44,8 +45,8 @@ class QueueService {
     });
   }
 
-  async deleteQueue(queueId: string) {
-    const queue = await queueRepository.findById(queueId);
+  async deleteQueue(queueId: string, managerId: string) {
+    const queue = await queueRepository.findById(queueId, managerId);
 
     if (!queue) {
       throw new Error("Queue not found");
@@ -54,7 +55,8 @@ class QueueService {
     return queueRepository.delete(queueId);
   }
 
-  async getQueueStats(queueId: string) {
+  async getQueueStats(queueId: string, managerId: string) {
+    await this.getQueueById(queueId, managerId);
     const stats = await queueRepository.getQueueStats(queueId);
 
     if (!stats) {
@@ -64,8 +66,8 @@ class QueueService {
     return stats;
   }
 
-  async getCurrentServing(queueId: string) {
-    const queue = await queueRepository.findById(queueId);
+  async getCurrentServing(queueId: string, managerId: string) {
+    const queue = await queueRepository.findById(queueId, managerId);
 
     if (!queue) {
       throw new Error("Queue not found");
