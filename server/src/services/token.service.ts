@@ -1,4 +1,4 @@
-import { TokenStatus } from "@prisma/client";
+import { Prisma, TokenStatus } from "@prisma/client";
 import { tokenRepository } from "../repositories/token.repository";
 import { queueRepository } from "../repositories/queue.repository";
 
@@ -11,15 +11,34 @@ class TokenService {
       throw new Error("Queue not found");
     }
 
-    const lastToken = await tokenRepository.getLastToken(queueId);
-
-    const position = lastToken ? lastToken.position + 1 : 1;
-
-    return tokenRepository.create({
+    const tokenData = {
       personName: personName.trim(),
-      position,
       queueId,
-    });
+    };
+
+    const maxAttempts = 3;
+    let lastError: unknown = null;
+
+    for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+      try {
+        return await tokenRepository.createWithNextPosition(tokenData);
+      } catch (error: unknown) {
+        lastError = error;
+        if (
+          error instanceof Prisma.PrismaClientKnownRequestError &&
+          error.code === "P2002"
+        ) {
+          continue;
+        }
+        throw error;
+      }
+    }
+
+    throw new Error(
+      lastError instanceof Error
+        ? lastError.message
+        : "Unable to add a person to the queue. Please try again."
+    );
   }
 
   async getWaitingList(queueId: string, managerId: string) {
@@ -39,22 +58,7 @@ class TokenService {
       throw new Error("Token already processed");
     }
 
-    const tokenAhead = await tokenRepository.findPreviousWaitingToken(
-      token.queueId,
-      token.position
-    );
-    if (tokenAhead) {
-      throw new Error("Only the token at the top of the queue can be served");
-    }
-
-    const updatedToken = await tokenRepository.update(tokenId, {
-      status: TokenStatus.SERVED,
-      servedAt: new Date(),
-    });
-
-    await tokenRepository.reorderWaitingTokens(token.queueId);
-
-    return updatedToken;
+    return tokenRepository.serveAndReorder(tokenId);
   }
 
   async cancelToken(tokenId: string, managerId: string) {
@@ -68,14 +72,7 @@ class TokenService {
       throw new Error("Only waiting tokens can be cancelled");
     }
 
-    const updatedToken = await tokenRepository.update(tokenId, {
-      status: TokenStatus.CANCELLED,
-      cancelledAt: new Date(),
-    });
-
-    await tokenRepository.reorderWaitingTokens(token.queueId);
-
-    return updatedToken;
+    return tokenRepository.cancelAndReorder(tokenId);
   }
 
   async moveTokenUp(tokenId: string, managerId: string) {

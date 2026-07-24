@@ -12,9 +12,7 @@ export const authenticate = (
 ) => {
   const authHeader = req.headers.authorization;
 
-  console.log("Authorization Header:", authHeader);
-
-  if (!authHeader) {
+  if (!authHeader?.startsWith("Bearer ")) {
     return res.status(401).json({
       message: "No token provided",
     });
@@ -22,19 +20,11 @@ export const authenticate = (
 
   const token = authHeader.replace("Bearer ", "");
 
-  console.log("Extracted Token:", token);
-
   try {
     const decoded = verifyToken(token);
-
-    console.log("Decoded Token:", decoded);
-
     req.userId = decoded.userId;
-
     next();
   } catch (error) {
-    console.log("JWT Verification Error:", error);
-
     return res.status(401).json({
       message: "Invalid token",
     });

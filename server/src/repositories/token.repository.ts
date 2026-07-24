@@ -12,6 +12,33 @@ export class TokenRepository {
     });
   }
 
+  async createWithNextPosition(data: {
+    personName: string;
+    queueId: string;
+  }) {
+    return prisma.$transaction(async (tx) => {
+      const lastToken = await tx.token.findFirst({
+        where: {
+          queueId: data.queueId,
+          status: TokenStatus.WAITING,
+        },
+        orderBy: {
+          position: "desc",
+        },
+      });
+
+      const position = lastToken ? lastToken.position + 1 : 1;
+
+      return tx.token.create({
+        data: {
+          personName: data.personName,
+          queueId: data.queueId,
+          position,
+        },
+      });
+    });
+  }
+
   async getLastToken(queueId: string) {
     return prisma.token.findFirst({
       where: {
@@ -67,6 +94,105 @@ export class TokenRepository {
       data: {
         status: TokenStatus.CANCELLED,
       },
+    });
+  }
+
+  async serveAndReorder(id: string) {
+    return prisma.$transaction(async (tx) => {
+      const token = await tx.token.findUnique({
+        where: { id },
+      });
+
+      if (!token || token.status !== TokenStatus.WAITING) {
+        throw new Error("Token not found or already processed");
+      }
+
+      const previousToken = await tx.token.findFirst({
+        where: {
+          queueId: token.queueId,
+          status: TokenStatus.WAITING,
+          position: {
+            lt: token.position,
+          },
+        },
+        orderBy: {
+          position: "desc",
+        },
+      });
+
+      if (previousToken) {
+        throw new Error("Only the token at the top of the queue can be served");
+      }
+
+      const updated = await tx.token.update({
+        where: { id },
+        data: {
+          status: TokenStatus.SERVED,
+          servedAt: new Date(),
+        },
+      });
+
+      const waitingTokens = await tx.token.findMany({
+        where: {
+          queueId: token.queueId,
+          status: TokenStatus.WAITING,
+        },
+        orderBy: {
+          position: "asc",
+        },
+      });
+
+      await Promise.all(
+        waitingTokens.map((waitingToken, index) =>
+          tx.token.update({
+            where: { id: waitingToken.id },
+            data: { position: index + 1 },
+          })
+        )
+      );
+
+      return updated;
+    });
+  }
+
+  async cancelAndReorder(id: string) {
+    return prisma.$transaction(async (tx) => {
+      const token = await tx.token.findUnique({
+        where: { id },
+      });
+
+      if (!token || token.status !== TokenStatus.WAITING) {
+        throw new Error("Token not found or already processed");
+      }
+
+      const updated = await tx.token.update({
+        where: { id },
+        data: {
+          status: TokenStatus.CANCELLED,
+          cancelledAt: new Date(),
+        },
+      });
+
+      const waitingTokens = await tx.token.findMany({
+        where: {
+          queueId: token.queueId,
+          status: TokenStatus.WAITING,
+        },
+        orderBy: {
+          position: "asc",
+        },
+      });
+
+      await Promise.all(
+        waitingTokens.map((waitingToken, index) =>
+          tx.token.update({
+            where: { id: waitingToken.id },
+            data: { position: index + 1 },
+          })
+        )
+      );
+
+      return updated;
     });
   }
 

@@ -63,6 +63,7 @@ model Token {
 
   cancelledAt   DateTime?
 
+  @@unique([queueId, position])
   @@index([queueId])
   @@index([status])
 }

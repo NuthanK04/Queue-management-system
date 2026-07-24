@@ -74,6 +74,33 @@ Open `http://localhost:5173`, create a manager account, and log in.
 
 > On Windows systems where PowerShell blocks `npm.ps1`, use `npm.cmd` in place of `npm`.
 
+## Production deployment
+
+This repository includes production-ready deployment support with Docker, a sample environment file, and GitHub Actions CI.
+
+1. Create a `.env` file in `server/` from `server/.env.example`.
+2. Create a `.env` file in `client/` from `client/.env.example` if you want to override the API base URL.
+3. Run the database migration:
+
+```powershell
+cd server
+npm install
+npx prisma migrate deploy
+npx prisma generate
+```
+
+4. Start the full stack locally with Docker Compose:
+
+```powershell
+docker compose up --build
+```
+
+5. Visit `http://localhost:3000` to use the app. The API will be available at `http://localhost:5000/api`.
+
+## Continuous integration
+
+A GitHub Actions workflow is included at `.github/workflows/ci.yml` to build the client and server and run server tests on every push and pull request.
+
 ## Main API routes
 
 | Method | Route | Purpose |

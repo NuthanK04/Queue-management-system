@@ -19,6 +19,12 @@ export default function QueueWorkspace({ queue, onDeleted, onChanged }: Props) {
 
   useEffect(() => {
     void refresh().catch(() => setError("Could not load this queue."));
+
+    const interval = setInterval(() => {
+      void refresh().catch(() => setError("Could not refresh queue."));
+    }, 10000);
+
+    return () => clearInterval(interval);
   }, [refresh]);
 
   const run = async (action: string, fn: () => Promise<void>, successMessage?: string) => {
