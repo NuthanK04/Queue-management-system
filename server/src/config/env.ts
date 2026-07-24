@@ -12,4 +12,17 @@ const envSchema = z.object({
   RATE_LIMIT_MAX: z.coerce.number().int().positive().default(100),
 });
 
-export const env = envSchema.parse(process.env);
+const envSource =
+  process.env.GITHUB_ACTIONS === "true"
+    ? {
+        ...process.env,
+        DATABASE_URL:
+          process.env.DATABASE_URL ??
+          "postgresql://test:test@localhost:5432/test",
+        JWT_SECRET:
+          process.env.JWT_SECRET ??
+          "github-actions-secret-12345",
+      }
+    : process.env;
+
+export const env = envSchema.parse(envSource);
