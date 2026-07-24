@@ -7,6 +7,7 @@ export interface Queue {
   managerId: string;
   createdAt: string;
   updatedAt: string;
+  _count?: { tokens: number };
 }
 
 export interface Token {
@@ -15,6 +16,12 @@ export interface Token {
   position: number;
   status: "WAITING" | "SERVED" | "CANCELLED";
   createdAt: string;
+}
+
+export interface CurrentServing {
+  id: string;
+  personName: string;
+  servedAt: string;
 }
 
 interface QueueResponse {
@@ -40,6 +47,11 @@ class QueueService {
 
   async deleteQueue(id: string): Promise<void> {
     await api.delete(`/queues/${id}`);
+  }
+
+  async getCurrentServing(id: string): Promise<CurrentServing | null> {
+    const response = await api.get<{ data: CurrentServing | null }>(`/queues/${id}/current`);
+    return response.data.data;
   }
 }
 

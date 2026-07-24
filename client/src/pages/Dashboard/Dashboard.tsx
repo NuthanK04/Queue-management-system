@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import StatsCards from "@/components/dashboard/StatsCards";
 import QueueList from "@/components/dashboard/QueueList";
@@ -17,9 +18,22 @@ export default function Dashboard() {
   const refresh = () => setRefreshKey((key) => key + 1);
   const createQueue = async (event: React.FormEvent) => {
     event.preventDefault();
-    try { setCreating(true); setError(""); const queue = await queueService.createQueue(name, description || undefined); setSelectedQueue(queue); setShowCreate(false); setName(""); setDescription(""); refresh(); }
-    catch (err: any) { setError(err.response?.data?.message || "Could not create the queue."); }
-    finally { setCreating(false); }
+    try {
+      setCreating(true);
+      setError("");
+      const queue = await queueService.createQueue(name, description || undefined);
+      setSelectedQueue(queue);
+      setShowCreate(false);
+      setName("");
+      setDescription("");
+      refresh();
+      toast.success("Queue created successfully");
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Could not create the queue.");
+      toast.error(err.response?.data?.message || "Could not create the queue.");
+    } finally {
+      setCreating(false);
+    }
   };
 
   return <div className="app-shell min-h-screen"><DashboardHeader />

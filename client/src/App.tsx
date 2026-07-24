@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "@/pages/Login/Login";
 import Dashboard from "@/pages/Dashboard/Dashboard";
 import { useAuth } from "@/context/AuthContext";
+import { Toaster } from "@/components/ui/sonner";
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { isAuthenticated } = useAuth();
@@ -11,6 +12,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 export default function App() {
   return (
+    <>
     <Routes>
       <Route path="/" element={<Navigate to="/login" replace />} />
 
@@ -27,5 +29,7 @@ export default function App() {
         }
       />
     </Routes>
+    <Toaster richColors position="top-right" />
+    </>
   );
 }

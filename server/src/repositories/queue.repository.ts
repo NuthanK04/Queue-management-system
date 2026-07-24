@@ -17,6 +17,11 @@ export class QueueRepository {
       where: {
         managerId,
       },
+      include: {
+        _count: {
+          select: { tokens: { where: { status: TokenStatus.WAITING } } },
+        },
+      },
       orderBy: {
         createdAt: "desc",
       },
