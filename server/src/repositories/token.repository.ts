@@ -1,5 +1,5 @@
 import prisma from "../config/prisma";
-import { TokenStatus } from "@prisma/client";
+import { TokenStatus, Prisma } from "@prisma/client";
 
 export class TokenRepository {
   async create(data: {
@@ -43,12 +43,23 @@ export class TokenRepository {
     });
   }
 
-  async update(id: string, data: any) {
+  async update(id: string, data: Prisma.TokenUpdateInput) {
     return prisma.token.update({
       where: {
         id,
       },
       data,
+    });
+  }
+
+  async cancelToken(id: string) {
+    return prisma.token.update({
+      where: {
+        id,
+      },
+      data: {
+        status: TokenStatus.CANCELLED,
+      },
     });
   }
 }

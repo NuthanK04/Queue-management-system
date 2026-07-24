@@ -1,4 +1,5 @@
 import prisma from "../config/prisma";
+import { TokenStatus } from "@prisma/client";
 
 export class QueueRepository {
   async create(data: {
@@ -56,6 +57,72 @@ export class QueueRepository {
     return prisma.queue.delete({
       where: {
         id,
+      },
+    });
+  }
+
+  async getQueueStats(queueId: string) {
+    const queue = await prisma.queue.findUnique({
+      where: {
+        id: queueId,
+      },
+      include: {
+        _count: {
+          select: {
+            tokens: true,
+          },
+        },
+      },
+    });
+
+    if (!queue) {
+      return null;
+    }
+
+    const waiting = await prisma.token.count({
+      where: {
+        queueId,
+        status: TokenStatus.WAITING,
+      },
+    });
+
+    const served = await prisma.token.count({
+      where: {
+        queueId,
+        status: TokenStatus.SERVED,
+      },
+    });
+
+    const cancelled = await prisma.token.count({
+      where: {
+        queueId,
+        status: TokenStatus.CANCELLED,
+      },
+    });
+
+    return {
+      queueName: queue.name,
+      totalTokens: queue._count.tokens,
+      waiting,
+      served,
+      cancelled,
+    };
+  }
+
+  async getCurrentServing(queueId: string) {
+    return prisma.token.findFirst({
+      where: {
+        queueId,
+        status: TokenStatus.SERVED,
+      },
+      orderBy: {
+        servedAt: "desc",
+      },
+      select: {
+        id: true,
+        personName: true,
+        position: true,
+        servedAt: true,
       },
     });
   }

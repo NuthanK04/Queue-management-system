@@ -7,10 +7,13 @@ const router = Router();
 // Add a person to a queue
 router.post("/", authenticate, tokenController.addPerson);
 
-// Get waiting list
+// Get waiting list for a queue
 router.get("/:queueId", authenticate, tokenController.getWaitingList);
 
-// Mark a token as served
+// Serve a token
 router.patch("/:tokenId/serve", authenticate, tokenController.serveToken);
+
+// Cancel a token
+router.patch("/:tokenId/cancel", authenticate, tokenController.cancelToken);
 
 export default router;

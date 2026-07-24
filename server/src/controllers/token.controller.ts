@@ -62,6 +62,26 @@ class TokenController {
       });
     }
   }
+
+  async cancelToken(req: Request, res: Response) {
+    try {
+      const { tokenId } = req.params;
+
+      const token = await tokenService.cancelToken(tokenId);
+
+      return res.status(200).json({
+        success: true,
+        message: "Token cancelled successfully",
+        data: token,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Failed to cancel token",
+      });
+    }
+  }
 }
 
 export const tokenController = new TokenController();

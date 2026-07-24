@@ -41,6 +41,23 @@ class TokenService {
       servedAt: new Date(),
     });
   }
+
+  async cancelToken(tokenId: string) {
+    const token = await tokenRepository.findById(tokenId);
+
+    if (!token) {
+      throw new Error("Token not found");
+    }
+
+    if (token.status !== TokenStatus.WAITING) {
+      throw new Error("Only waiting tokens can be cancelled");
+    }
+
+    return tokenRepository.update(tokenId, {
+      status: TokenStatus.CANCELLED,
+      cancelledAt: new Date(),
+    });
+  }
 }
 
 export const tokenService = new TokenService();

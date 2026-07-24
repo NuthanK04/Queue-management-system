@@ -1,26 +1,24 @@
-import { QueueRepository } from "../repositories/queue.repository";
+import { queueRepository } from "../repositories/queue.repository";
 
-export class QueueService {
-  private queueRepository = new QueueRepository();
-
-  async createQueue(data: {
-    name: string;
-    description?: string;
-    managerId: string;
-  }) {
-    if (!data.name.trim()) {
-      throw new Error("Queue name is required");
-    }
-
-    return this.queueRepository.create(data);
+class QueueService {
+  async createQueue(
+    name: string,
+    description: string | undefined,
+    managerId: string
+  ) {
+    return queueRepository.create({
+      name,
+      description,
+      managerId,
+    });
   }
 
   async getQueues(managerId: string) {
-    return this.queueRepository.findByManager(managerId);
+    return queueRepository.findByManager(managerId);
   }
 
-  async getQueue(id: string) {
-    const queue = await this.queueRepository.findById(id);
+  async getQueueById(queueId: string) {
+    const queue = await queueRepository.findById(queueId);
 
     if (!queue) {
       throw new Error("Queue not found");
@@ -30,16 +28,51 @@ export class QueueService {
   }
 
   async updateQueue(
-    id: string,
-    data: {
-      name?: string;
-      description?: string;
-    }
+    queueId: string,
+    name?: string,
+    description?: string
   ) {
-    return this.queueRepository.update(id, data);
+    const queue = await queueRepository.findById(queueId);
+
+    if (!queue) {
+      throw new Error("Queue not found");
+    }
+
+    return queueRepository.update(queueId, {
+      name,
+      description,
+    });
   }
 
-  async deleteQueue(id: string) {
-    return this.queueRepository.delete(id);
+  async deleteQueue(queueId: string) {
+    const queue = await queueRepository.findById(queueId);
+
+    if (!queue) {
+      throw new Error("Queue not found");
+    }
+
+    return queueRepository.delete(queueId);
+  }
+
+  async getQueueStats(queueId: string) {
+    const stats = await queueRepository.getQueueStats(queueId);
+
+    if (!stats) {
+      throw new Error("Queue not found");
+    }
+
+    return stats;
+  }
+
+  async getCurrentServing(queueId: string) {
+    const queue = await queueRepository.findById(queueId);
+
+    if (!queue) {
+      throw new Error("Queue not found");
+    }
+
+    return queueRepository.getCurrentServing(queueId);
   }
 }
+
+export const queueService = new QueueService();

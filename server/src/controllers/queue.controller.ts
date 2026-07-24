@@ -1,94 +1,152 @@
 import { Request, Response } from "express";
-import { QueueService } from "../services/queue.service";
-import { AuthRequest } from "../middlewares/auth.middleware";
+import { queueService } from "../services/queue.service";
 
-const queueService = new QueueService();
-
-export class QueueController {
-  async create(req: AuthRequest, res: Response) {
+class QueueController {
+  async createQueue(req: Request, res: Response) {
     try {
       const { name, description } = req.body;
+      const managerId = req.userId!;
 
-      const queue = await queueService.createQueue({
+      const queue = await queueService.createQueue(
         name,
         description,
-        managerId: req.userId!,
-      });
+        managerId
+      );
 
       return res.status(201).json({
         success: true,
         message: "Queue created successfully",
         data: queue,
       });
-    } catch (error: any) {
+    } catch (error) {
       return res.status(400).json({
         success: false,
-        message: error.message,
+        message:
+          error instanceof Error ? error.message : "Failed to create queue",
       });
     }
   }
 
-  async getAll(req: AuthRequest, res: Response) {
+  async getQueues(req: Request, res: Response) {
     try {
-      const queues = await queueService.getQueues(req.userId!);
+      const managerId = req.userId!;
 
-      return res.json({
+      const queues = await queueService.getQueues(managerId);
+
+      return res.status(200).json({
         success: true,
         data: queues,
       });
-    } catch (error: any) {
-      return res.status(500).json({
+    } catch (error) {
+      return res.status(400).json({
         success: false,
-        message: error.message,
+        message:
+          error instanceof Error ? error.message : "Failed to fetch queues",
       });
     }
   }
 
-  async getById(req: Request, res: Response) {
+  async getQueueById(req: Request, res: Response) {
     try {
-      const queue = await queueService.getQueue(req.params.id);
+      const { queueId } = req.params;
 
-      return res.json({
+      const queue = await queueService.getQueueById(queueId);
+
+      return res.status(200).json({
         success: true,
         data: queue,
       });
-    } catch (error: any) {
+    } catch (error) {
       return res.status(404).json({
         success: false,
-        message: error.message,
+        message:
+          error instanceof Error ? error.message : "Queue not found",
       });
     }
   }
 
-  async update(req: Request, res: Response) {
+  async updateQueue(req: Request, res: Response) {
     try {
-      const queue = await queueService.updateQueue(req.params.id, req.body);
+      const { queueId } = req.params;
+      const { name, description } = req.body;
 
-      return res.json({
+      const queue = await queueService.updateQueue(
+        queueId,
+        name,
+        description
+      );
+
+      return res.status(200).json({
         success: true,
         message: "Queue updated successfully",
         data: queue,
       });
-    } catch (error: any) {
+    } catch (error) {
       return res.status(400).json({
         success: false,
-        message: error.message,
+        message:
+          error instanceof Error ? error.message : "Failed to update queue",
       });
     }
   }
 
-  async delete(req: Request, res: Response) {
+  async deleteQueue(req: Request, res: Response) {
     try {
-      await queueService.deleteQueue(req.params.id);
+      const { queueId } = req.params;
 
-      return res.json({
+      await queueService.deleteQueue(queueId);
+
+      return res.status(200).json({
         success: true,
         message: "Queue deleted successfully",
       });
-    } catch (error: any) {
+    } catch (error) {
       return res.status(400).json({
         success: false,
-        message: error.message,
+        message:
+          error instanceof Error ? error.message : "Failed to delete queue",
+      });
+    }
+  }
+
+  async getQueueStats(req: Request, res: Response) {
+    try {
+      const { queueId } = req.params;
+
+      const stats = await queueService.getQueueStats(queueId);
+
+      return res.status(200).json({
+        success: true,
+        data: stats,
+      });
+    } catch (error) {
+      return res.status(404).json({
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch queue statistics",
+      });
+    }
+  }
+
+  async getCurrentServing(req: Request, res: Response) {
+    try {
+      const { queueId } = req.params;
+
+      const current = await queueService.getCurrentServing(queueId);
+
+      return res.status(200).json({
+        success: true,
+        data: current,
+      });
+    } catch (error) {
+      return res.status(404).json({
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to fetch current serving token",
       });
     }
   }
