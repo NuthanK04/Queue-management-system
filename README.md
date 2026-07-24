@@ -39,7 +39,7 @@ server/   # Express API and Prisma schema/migrations
 Create `server/.env`:
 
 ```env
-DATABASE_URL="postgresql://USER:PASSWORD@localhost:5432/queue_management?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/queue_management?schema=public"
 JWT_SECRET="replace-with-a-long-random-secret"
 PORT=5000
 ```
@@ -95,7 +95,28 @@ npx prisma generate
 docker compose up --build
 ```
 
-5. Visit `http://localhost:3000` to use the app. The API will be available at `http://localhost:5000/api`.
+5. Visit `http://localhost:5000` to use the app. The API will also be available at `http://localhost:5000/api`.
+
+## Cloud deployment (Render)
+
+For managed hosting, Render is a simple option for this repository because the server now serves the built frontend and can connect to a managed PostgreSQL database.
+
+1. Connect this repository to Render.
+2. Create a new PostgreSQL database on Render.
+3. Create a web service using the `server/Dockerfile` and set the following environment variables:
+
+```text
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/queue_management?schema=public"
+JWT_SECRET=<strong-secret>
+PORT=5000
+CORS_ORIGIN=https://<your-render-url>
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX=100
+```
+
+4. Deploy the service. The frontend and API will both be served from the same Render URL.
+
+5. Optionally, add a `render.yaml` manifest to the repository so Render can manage the web service and database from code.
 
 ## Continuous integration
 
@@ -125,3 +146,6 @@ cd ../server; npm run build
 ```
 
 Both the client and server compile successfully.
+
+
+

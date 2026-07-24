@@ -1,7 +1,9 @@
 import express from "express";
 import cors from "cors";
+import fs from "fs";
 import helmet from "helmet";
 import morgan from "morgan";
+import path from "path";
 import rateLimit from "express-rate-limit";
 
 import authRoutes from "./routes/auth.routes";
@@ -34,6 +36,15 @@ app.use(
 );
 app.use(express.json());
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+
+const clientStaticPath = path.resolve(__dirname, "../public");
+if (fs.existsSync(clientStaticPath)) {
+  app.use(express.static(clientStaticPath));
+
+  app.get(/^\/(?!api|health).*/, (_req, res) => {
+    res.sendFile(path.join(clientStaticPath, "index.html"));
+  });
+}
 
 // Root Route
 app.get("/", (_req, res) => {
