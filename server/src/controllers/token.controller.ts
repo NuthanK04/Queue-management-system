@@ -82,6 +82,46 @@ class TokenController {
       });
     }
   }
+
+  async moveTokenUp(req: Request, res: Response) {
+    try {
+      const { tokenId } = req.params;
+
+      const tokens = await tokenService.moveTokenUp(tokenId);
+
+      return res.status(200).json({
+        success: true,
+        message: "Token moved up successfully",
+        data: tokens,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Failed to move token up",
+      });
+    }
+  }
+
+  async moveTokenDown(req: Request, res: Response) {
+    try {
+      const { tokenId } = req.params;
+
+      const tokens = await tokenService.moveTokenDown(tokenId);
+
+      return res.status(200).json({
+        success: true,
+        message: "Token moved down successfully",
+        data: tokens,
+      });
+    } catch (error) {
+      return res.status(400).json({
+        success: false,
+        message:
+          error instanceof Error ? error.message : "Failed to move token down",
+      });
+    }
+  }
 }
 
 export const tokenController = new TokenController();

@@ -16,4 +16,10 @@ router.patch("/:tokenId/serve", authenticate, tokenController.serveToken);
 // Cancel a token
 router.patch("/:tokenId/cancel", authenticate, tokenController.cancelToken);
 
+// Move token up
+router.patch("/:tokenId/move-up", authenticate, tokenController.moveTokenUp);
+
+// Move token down
+router.patch("/:tokenId/move-down", authenticate, tokenController.moveTokenDown);
+
 export default router;

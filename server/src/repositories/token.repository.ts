@@ -62,6 +62,87 @@ export class TokenRepository {
       },
     });
   }
+
+  async findPreviousWaitingToken(queueId: string, position: number) {
+    return prisma.token.findFirst({
+      where: {
+        queueId,
+        status: TokenStatus.WAITING,
+        position: {
+          lt: position,
+        },
+      },
+      orderBy: {
+        position: "desc",
+      },
+    });
+  }
+
+  async findNextWaitingToken(queueId: string, position: number) {
+    return prisma.token.findFirst({
+      where: {
+        queueId,
+        status: TokenStatus.WAITING,
+        position: {
+          gt: position,
+        },
+      },
+      orderBy: {
+        position: "asc",
+      },
+    });
+  }
+
+  async swapPositions(
+    firstTokenId: string,
+    firstPosition: number,
+    secondTokenId: string,
+    secondPosition: number
+  ) {
+    await prisma.$transaction([
+      prisma.token.update({
+        where: {
+          id: firstTokenId,
+        },
+        data: {
+          position: secondPosition,
+        },
+      }),
+      prisma.token.update({
+        where: {
+          id: secondTokenId,
+        },
+        data: {
+          position: firstPosition,
+        },
+      }),
+    ]);
+  }
+
+  async reorderWaitingTokens(queueId: string) {
+    const waitingTokens = await prisma.token.findMany({
+      where: {
+        queueId,
+        status: TokenStatus.WAITING,
+      },
+      orderBy: {
+        position: "asc",
+      },
+    });
+
+    await prisma.$transaction(
+      waitingTokens.map((token, index) =>
+        prisma.token.update({
+          where: {
+            id: token.id,
+          },
+          data: {
+            position: index + 1,
+          },
+        })
+      )
+    );
+  }
 }
 
 export const tokenRepository = new TokenRepository();

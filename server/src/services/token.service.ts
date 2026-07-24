@@ -36,10 +36,14 @@ class TokenService {
       throw new Error("Token already processed");
     }
 
-    return tokenRepository.update(tokenId, {
+    const updatedToken = await tokenRepository.update(tokenId, {
       status: TokenStatus.SERVED,
       servedAt: new Date(),
     });
+
+    await tokenRepository.reorderWaitingTokens(token.queueId);
+
+    return updatedToken;
   }
 
   async cancelToken(tokenId: string) {
@@ -53,10 +57,74 @@ class TokenService {
       throw new Error("Only waiting tokens can be cancelled");
     }
 
-    return tokenRepository.update(tokenId, {
+    const updatedToken = await tokenRepository.update(tokenId, {
       status: TokenStatus.CANCELLED,
       cancelledAt: new Date(),
     });
+
+    await tokenRepository.reorderWaitingTokens(token.queueId);
+
+    return updatedToken;
+  }
+
+  async moveTokenUp(tokenId: string) {
+    const token = await tokenRepository.findById(tokenId);
+
+    if (!token) {
+      throw new Error("Token not found");
+    }
+
+    if (token.status !== TokenStatus.WAITING) {
+      throw new Error("Only waiting tokens can be moved");
+    }
+
+    const previousToken = await tokenRepository.findPreviousWaitingToken(
+      token.queueId,
+      token.position
+    );
+
+    if (!previousToken) {
+      throw new Error("Token is already at the top");
+    }
+
+    await tokenRepository.swapPositions(
+      token.id,
+      token.position,
+      previousToken.id,
+      previousToken.position
+    );
+
+    return tokenRepository.getQueueTokens(token.queueId);
+  }
+
+  async moveTokenDown(tokenId: string) {
+    const token = await tokenRepository.findById(tokenId);
+
+    if (!token) {
+      throw new Error("Token not found");
+    }
+
+    if (token.status !== TokenStatus.WAITING) {
+      throw new Error("Only waiting tokens can be moved");
+    }
+
+    const nextToken = await tokenRepository.findNextWaitingToken(
+      token.queueId,
+      token.position
+    );
+
+    if (!nextToken) {
+      throw new Error("Token is already at the bottom");
+    }
+
+    await tokenRepository.swapPositions(
+      token.id,
+      token.position,
+      nextToken.id,
+      nextToken.position
+    );
+
+    return tokenRepository.getQueueTokens(token.queueId);
   }
 }
 
