@@ -60,3 +60,5 @@ export class QueueRepository {
     });
   }
 }
+
+export const queueRepository = new QueueRepository();
