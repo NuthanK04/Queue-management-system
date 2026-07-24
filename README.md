@@ -97,7 +97,48 @@ docker compose up --build
 
 5. Visit `http://localhost:5000` to use the app. The API will also be available at `http://localhost:5000/api`.
 
-## Cloud deployment (Render)
+## Cloud deployment
+
+This repository supports a split deployment with the backend on Render and the frontend on Vercel.
+
+### Deploy backend on Render
+
+1. Connect this GitHub repository to Render.
+2. Create a new PostgreSQL database on Render.
+3. Create a web service using the `server/Dockerfile`.
+4. Add these environment variables in Render:
+
+```text
+DATABASE_URL=<Render database URL>
+JWT_SECRET=<strong-secret>
+PORT=5000
+CORS_ORIGIN=https://<your-vercel-url>
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX=100
+```
+
+5. Deploy the service. Note the Render service URL.
+
+### Deploy frontend on Vercel
+
+1. Connect this repository to Vercel.
+2. Use the `client` directory as the project root.
+3. Set the build command to `npm run build` and the output directory to `dist`.
+4. Add this environment variable in Vercel:
+
+```text
+VITE_API_BASE_URL=https://<your-render-url>/api
+```
+
+5. Deploy the frontend.
+
+When both are deployed, the frontend will call the Render backend with the Vercel URL as the user-facing app.
+
+### Optional Render manifest
+
+If you want Render to manage the backend directly from code, keep the `render.yaml` manifest in the repository and update the service name and `CORS_ORIGIN` values as needed.
+
+## Continuous integration
 
 For managed hosting, Render is a simple option for this repository because the server now serves the built frontend and can connect to a managed PostgreSQL database.
 
@@ -146,6 +187,8 @@ cd ../server; npm run build
 ```
 
 Both the client and server compile successfully.
+
+
 
 
 

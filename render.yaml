@@ -10,7 +10,7 @@ services:
       - key: PORT
         value: "5000"
       - key: CORS_ORIGIN
-        value: "https://queue-management-system.onrender.com"
+        value: "https://<your-vercel-url>"
       - key: RATE_LIMIT_WINDOW_MS
         value: "60000"
       - key: RATE_LIMIT_MAX
