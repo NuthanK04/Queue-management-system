@@ -1,108 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
+import { ArrowRight, CheckCircle2, LockKeyhole, Moon, Sparkles, Sun } from "lucide-react";
+import { useTheme } from "next-themes";
 import api from "@/services/api";
 import { useAuth } from "@/context/AuthContext";
 
 export default function Login() {
-  const navigate = useNavigate();
-  const { login } = useAuth();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [name, setName] = useState("");
-
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-
-    try {
-      setLoading(true);
-      setError("");
-
-      const response = await api.post(isRegistering ? "/auth/register" : "/auth/login", isRegistering
-        ? { name, email, password }
-        : { email, password });
-
-      login(response.data.token, response.data.user);
-
-      navigate("/dashboard");
-    } catch (err: any) {
-      setError(
-        err.response?.data?.message || "Unable to login. Please try again."
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-      <div className="w-full max-w-md rounded-xl bg-white p-8 shadow-lg">
-        <h1 className="mb-2 text-center text-3xl font-bold">
-          Queue Management
-        </h1>
-
-        <p className="mb-6 text-center text-gray-500">
-          {isRegistering ? "Create your manager account" : "Manager Login"}
-        </p>
-
-        {error && (
-          <div className="mb-4 rounded-md bg-red-100 p-3 text-sm text-red-600">
-            {error}
-          </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {isRegistering && <div>
-            <label className="mb-2 block text-sm font-medium">Name</label>
-            <input type="text" placeholder="Your name" value={name} onChange={(e) => setName(e.target.value)} className="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-blue-500" required />
-          </div>}
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Email
-            </label>
-
-            <input
-              type="email"
-              placeholder="Enter email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-medium">
-              Password
-            </label>
-
-            <input
-              type="password"
-              placeholder="Enter password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-lg border p-3 outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-blue-600 p-3 font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Please wait..." : isRegistering ? "Create account" : "Login"}
-          </button>
-        </form>
-        <button type="button" onClick={() => { setIsRegistering(!isRegistering); setError(""); }} className="mt-5 w-full text-sm font-medium text-blue-600 hover:text-blue-700">
-          {isRegistering ? "Already have an account? Log in" : "New here? Create a manager account"}
-        </button>
-      </div>
-    </div>
-  );
+  const navigate = useNavigate(); const { login } = useAuth();
+  const { theme, setTheme } = useTheme();
+  const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false); const [error, setError] = useState(""); const [isRegistering, setIsRegistering] = useState(false);
+  async function handleSubmit(e: React.FormEvent) { e.preventDefault(); try { setLoading(true); setError(""); const response = await api.post(isRegistering ? "/auth/register" : "/auth/login", isRegistering ? { name, email, password } : { email, password }); login(response.data.token, response.data.user); navigate("/dashboard"); } catch (err: any) { setError(err.response?.data?.message || "We couldn't sign you in. Please try again."); } finally { setLoading(false); } }
+  const inputClass = "mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:bg-slate-950 dark:focus:ring-indigo-500/20";
+  return <div className="min-h-screen bg-slate-950 p-4 sm:p-7"><button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label="Toggle theme" className="fixed right-7 top-7 z-10 grid size-10 place-items-center rounded-xl bg-white/10 text-white backdrop-blur transition hover:bg-white/20">{theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}</button><div className="mx-auto grid min-h-[calc(100vh-2rem)] max-w-6xl overflow-hidden rounded-[2rem] bg-white shadow-2xl shadow-slate-950/40 dark:bg-slate-900 lg:grid-cols-[1.05fr_.95fr]">
+    <aside className="relative hidden overflow-hidden bg-gradient-to-br from-indigo-600 via-indigo-600 to-violet-700 p-12 text-white lg:block"><div className="absolute -right-20 -top-20 size-80 rounded-full border-[42px] border-white/10" /><div className="absolute -bottom-28 -left-16 size-80 rounded-full border-[42px] border-white/10" /><div className="relative flex h-full flex-col"><div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-2xl bg-white/15 backdrop-blur"><Sparkles size={22} /></span><span className="text-lg font-bold">QueueFlow</span></div><div className="my-auto"><p className="text-sm font-bold tracking-[0.18em] text-indigo-200">SERVICE, SIMPLIFIED</p><h1 className="mt-5 text-5xl font-bold leading-tight">A better flow for every visitor.</h1><p className="mt-6 max-w-md text-lg leading-8 text-indigo-100">Keep queues moving, give teams clarity, and turn wait time into a smoother experience.</p><div className="mt-10 space-y-4 text-sm font-medium">{["One clear view of every queue", "Simple token reordering", "Live operational insights"].map((item) => <div key={item} className="flex items-center gap-3"><CheckCircle2 size={19} className="text-indigo-200" />{item}</div>)}</div></div><p className="text-sm text-indigo-200">Built for thoughtful service teams.</p></div></aside>
+    <main className="flex items-center justify-center p-7 sm:p-12"><div className="w-full max-w-md"><div className="mb-9"><div className="mb-6 grid size-11 place-items-center rounded-2xl bg-indigo-600 text-white shadow-lg shadow-indigo-200 lg:hidden"><Sparkles size={21} /></div><p className="text-sm font-bold uppercase tracking-[0.15em] text-indigo-600">{isRegistering ? "Welcome aboard" : "Welcome back"}</p><h2 className="mt-2 text-3xl font-bold tracking-tight text-slate-900 dark:text-white">{isRegistering ? "Create your workspace" : "Sign in to QueueFlow"}</h2><p className="mt-3 text-slate-500 dark:text-slate-400">{isRegistering ? "Set up your manager account in a moment." : "Enter your details to manage today’s service lines."}</p></div>{error && <div className="mb-5 rounded-xl border border-red-100 bg-red-50 px-3.5 py-3 text-sm text-red-700">{error}</div>}<form onSubmit={handleSubmit} className="space-y-5">{isRegistering && <label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">Your name<input value={name} onChange={(e) => setName(e.target.value)} placeholder="e.g. Alex Morgan" className={inputClass} required /></label>}<label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">Email address<input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="you@company.com" className={inputClass} required /></label><label className="block text-sm font-semibold text-slate-700 dark:text-slate-200">Password<input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Enter your password" className={inputClass} required /></label><button disabled={loading} className="mt-2 flex w-full items-center justify-center gap-2 rounded-xl bg-indigo-600 px-4 py-3.5 font-bold text-white shadow-lg shadow-indigo-200 transition hover:-translate-y-0.5 hover:bg-indigo-700 disabled:opacity-50">{loading ? "Please wait…" : isRegistering ? "Create account" : "Sign in"}<ArrowRight size={18} /></button></form><div className="my-7 flex items-center gap-3 text-xs text-slate-400"><span className="h-px flex-1 bg-slate-200 dark:bg-white/10" />OR<span className="h-px flex-1 bg-slate-200 dark:bg-white/10" /></div><button type="button" onClick={() => { setIsRegistering(!isRegistering); setError(""); }} className="w-full rounded-xl border border-slate-200 px-4 py-3 text-sm font-bold text-slate-700 transition hover:border-indigo-200 hover:bg-indigo-50 hover:text-indigo-700 dark:border-white/10 dark:text-slate-200 dark:hover:bg-white/10 dark:hover:text-white">{isRegistering ? "I already have an account" : "Create a manager account"}</button><p className="mt-7 flex items-center justify-center gap-2 text-center text-xs text-slate-400"><LockKeyhole size={13} /> Secure access for your team</p></div></main>
+  </div></div>;
 }
