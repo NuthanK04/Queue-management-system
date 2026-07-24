@@ -89,7 +89,7 @@ npx prisma migrate deploy
 npx prisma generate
 ```
 
-4. Start the full stack locally with Docker Compose:
+4. Start the full stack locally with Docker Compose. Make sure Docker Desktop or your Docker daemon is running before starting the stack.
 
 ```powershell
 docker compose up --build
