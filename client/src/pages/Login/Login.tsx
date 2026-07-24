@@ -10,7 +10,26 @@ export default function Login() {
   const { theme, setTheme } = useTheme();
   const [email, setEmail] = useState(""); const [password, setPassword] = useState(""); const [name, setName] = useState("");
   const [loading, setLoading] = useState(false); const [error, setError] = useState(""); const [isRegistering, setIsRegistering] = useState(false);
-  async function handleSubmit(e: React.FormEvent) { e.preventDefault(); try { setLoading(true); setError(""); const response = await api.post(isRegistering ? "/auth/register" : "/auth/login", isRegistering ? { name, email, password } : { email, password }); login(response.data.token, response.data.user); navigate("/dashboard"); } catch (err: any) { setError(err.response?.data?.message || "We couldn't sign you in. Please try again."); } finally { setLoading(false); } }
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    try {
+      setLoading(true);
+      setError("");
+      const response = await api.post(
+        isRegistering ? "/auth/register" : "/auth/login",
+        isRegistering ? { name, email, password } : { email, password }
+      );
+      login(response.data.token, response.data.user);
+      navigate("/dashboard");
+    } catch (err: any) {
+      const defaultMessage = isRegistering
+        ? "We couldn't create your account. Please check your details and try again."
+        : "We couldn't sign you in. Please try again.";
+      setError(err.response?.data?.message || defaultMessage);
+    } finally {
+      setLoading(false);
+    }
+  }
   const inputClass = "mt-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-3 text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100 dark:border-white/10 dark:bg-white/5 dark:text-white dark:focus:bg-slate-950 dark:focus:ring-indigo-500/20";
   return <div className="min-h-screen bg-slate-950 p-4 sm:p-7"><button onClick={() => setTheme(theme === "dark" ? "light" : "dark")} aria-label="Toggle theme" className="fixed right-7 top-7 z-10 grid size-10 place-items-center rounded-xl bg-white/10 text-white backdrop-blur transition hover:bg-white/20">{theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}</button><div className="mx-auto grid min-h-[calc(100vh-2rem)] max-w-6xl overflow-hidden rounded-[2rem] bg-white shadow-2xl shadow-slate-950/40 dark:bg-slate-900 lg:grid-cols-[1.05fr_.95fr]">
     <aside className="relative hidden overflow-hidden bg-gradient-to-br from-indigo-600 via-indigo-600 to-violet-700 p-12 text-white lg:block"><div className="absolute -right-20 -top-20 size-80 rounded-full border-[42px] border-white/10" /><div className="absolute -bottom-28 -left-16 size-80 rounded-full border-[42px] border-white/10" /><div className="relative flex h-full flex-col"><div className="flex items-center gap-3"><span className="grid size-11 place-items-center rounded-2xl bg-white/15 backdrop-blur"><Sparkles size={22} /></span><span className="text-lg font-bold">QueueFlow</span></div><div className="my-auto"><p className="text-sm font-bold tracking-[0.18em] text-indigo-200">SERVICE, SIMPLIFIED</p><h1 className="mt-5 text-5xl font-bold leading-tight">A better flow for every visitor.</h1><p className="mt-6 max-w-md text-lg leading-8 text-indigo-100">Keep queues moving, give teams clarity, and turn wait time into a smoother experience.</p><div className="mt-10 space-y-4 text-sm font-medium">{["One clear view of every queue", "Simple token reordering", "Live operational insights"].map((item) => <div key={item} className="flex items-center gap-3"><CheckCircle2 size={19} className="text-indigo-200" />{item}</div>)}</div></div><p className="text-sm text-indigo-200">Built for thoughtful service teams.</p></div></aside>
