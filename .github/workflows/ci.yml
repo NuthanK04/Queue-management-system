@@ -15,31 +15,40 @@ jobs:
         node-version: [20.x]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Setup Node
+      - name: Setup Node.js
         uses: actions/setup-node@v5
         with:
           node-version: ${{ matrix.node-version }}
           cache: npm
           cache-dependency-path: |
-            client/package-lock.json
             server/package-lock.json
+            client/package-lock.json
 
-      - name: Show versions
-        run: |
-          node -v
-          npm -v
+      # ---------------- SERVER ----------------
 
-      - name: Install server
+      - name: Install server dependencies
         working-directory: server
         run: npm install
 
+      - name: Generate Prisma Client
+        working-directory: server
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: npx prisma generate
+
       - name: Build server
         working-directory: server
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: npm run build
 
-      - name: Install client
+      # ---------------- CLIENT ----------------
+
+      - name: Install client dependencies
         working-directory: client
         run: npm install
 
@@ -47,6 +56,11 @@ jobs:
         working-directory: client
         run: npm run build
 
-      - name: Test server
+      # ---------------- TESTS ----------------
+
+      - name: Run server tests
         working-directory: server
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
         run: npm test
