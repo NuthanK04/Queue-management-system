@@ -17,12 +17,20 @@ const envSource =
     ? {
         ...process.env,
         DATABASE_URL:
-          process.env.DATABASE_URL ??
+          process.env.DATABASE_URL ||
           "postgresql://test:test@localhost:5432/test",
         JWT_SECRET:
-          process.env.JWT_SECRET ??
+          process.env.JWT_SECRET ||
           "github-actions-secret-12345",
       }
-    : process.env;
+    : {
+        ...process.env,
+        DATABASE_URL:
+          process.env.DATABASE_URL ||
+          "postgresql://test:test@localhost:5432/test",
+        JWT_SECRET:
+          process.env.JWT_SECRET ||
+          "github-actions-secret-12345",
+      };
 
 export const env = envSchema.parse(envSource);
